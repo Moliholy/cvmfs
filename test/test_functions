@@ -1222,10 +1222,10 @@ wait_fqrn_mount() {
 single_execution() {
   cvmfs2 -f -o config=cvmfs.conf,disable_watchdog,simple_options_parsing $FQRN /cvmfs/$FQRN 2>&1 & #> /dev/null 2>&1 &
   wait_fqrn_mount
-
   cvmfs_run_benchmark 2>&1
+  local code=$?
   cvmfs_umount $FQRN
-  return 0
+  return $code
 }
 
 
@@ -1246,7 +1246,7 @@ CVMFS_HTTP_PROXY=${CVMFS_TEST_PROXY}
 CVMFS_AUTO_UPDATE=false
 CMS_LOCAL_SITE=${test_folder}/benchmarks/004-cms
 CVMFS_QUOTA_LIMIT=-1
-
+CVMFS_KEYS_DIR=/etc/cvmfs/keys/cern.ch
 EOF
 
 }
@@ -1344,14 +1344,15 @@ create_statistics_file() {
   local iteration=$1
   local total_time=$2
   local statistics_file="${FQRN}_${iteration}.data"
-    # creating the statistics file calling cvmfs_talk
-    cat >$statistics_file << EOF
+  benchmark_log "creating the statistics file ${statistics_file} calling cvmfs_talk"
+  cat >$statistics_file << EOF
 # repo=$FQRN
 # iterations=$CVMFS_OPT_ITERATIONS
 # warm_cache=$CVMFS_OPT_WARM_CACHE
 
 EOF
 
+  benchmark_log "Executing cvmfs_talk"
   cvmfs_talk -p "$CVMFS_OPT_CACHEDIR"/$FQRN/cvmfs_io.$FQRN internal affairs | grep \| | tail -n +2 >> $statistics_file
   echo "global.sz_total_time|$total_time|Total execution time (seconds)" >> $statistics_file # of only one iteration without valgrind!
 }
@@ -1359,19 +1360,19 @@ EOF
 
 # executes the statistics loop
 execute_statistics_loop() {
-  local iteration=1
   local code=0
-  local count=$CVMFS_OPT_ITERATIONS
+  local iteration=1
 
-  while (( count > 0 && code == 0 )); do
+  while (( iteration <= $CVMFS_OPT_ITERATIONS && code == 0 )); do
     local start_time=$(date +%s)
-    single_execution
+    cvmfs2 -f -o config=cvmfs.conf,disable_watchdog,simple_options_parsing $FQRN /cvmfs/$FQRN 2>&1 & #> /dev/null 2>&1 &
+    wait_fqrn_mount
+    cvmfs_run_benchmark 2>&1
     code=$?
     local end_time=$(date +%s)
     local total_time=$(( end_time - start_time )) # in seconds
-    create_statistics_file
-
-    count=$(( count - 1 ))
+    create_statistics_file $iteration $total_time
+    cvmfs_umount $FQRN
     iteration=$(( iteration + 1 ))
   done
 
@@ -1390,7 +1391,7 @@ execute_benchmark_loop() {
 
   while (( count > 0 && code == 0 )); do
     benchmark_log "Starting iteration ${iteration}"
-    eval cvmfs_run_benchmark
+    cvmfs_run_benchmark
     code=$?
     count=$(( count - 1 ))
     iteration=$(( iteration + 1 ))
