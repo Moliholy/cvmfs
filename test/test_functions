@@ -256,8 +256,12 @@ cvmfs_umount() {
     sudo umount /cvmfs/$r
     local result=$?
     if [ $result -ne 0 ]; then
-      lsof /cvmfs/$r
-      return 200
+      sudo umount -l /cvmfs/$r
+      result=$?
+      if [ $result -ne 0 ]; then
+        lsof /cvmfs/$r
+        return 200
+      fi
     fi
 
     timeout=5
@@ -1362,10 +1366,12 @@ EOF
 execute_statistics_loop() {
   local code=0
   local iteration=1
+  local PID=0
 
   while (( iteration <= $CVMFS_OPT_ITERATIONS && code == 0 )); do
     local start_time=$(date +%s)
-    cvmfs2 -f -o config=cvmfs.conf,disable_watchdog,simple_options_parsing $FQRN /cvmfs/$FQRN 2>&1 & #> /dev/null 2>&1 &
+    cvmfs2 -f -o config=cvmfs.conf,disable_watchdog,simple_options_parsing $FQRN /cvmfs/$FQRN 2>&1 &
+    PID=$!
     wait_fqrn_mount
     cvmfs_run_benchmark 2>&1
     code=$?
@@ -1373,6 +1379,7 @@ execute_statistics_loop() {
     local total_time=$(( end_time - start_time )) # in seconds
     create_statistics_file $iteration $total_time
     cvmfs_umount $FQRN
+    wait $PID
     iteration=$(( iteration + 1 ))
   done
 
@@ -1380,6 +1387,8 @@ execute_statistics_loop() {
     benchmark_log "Problem executing the tests. Aborting"
     benchmark_log $(lsof /cvmfs/${FQRN})
   fi
+
+  return $code
 }
 
 
@@ -1400,6 +1409,7 @@ execute_benchmark_loop() {
   if [ "$code" -ne 0 ]; then
     benchmark_log "Problem executing the tests. Aborting"
     benchmark_log $(lsof /cvmfs/${FQRN})
+    exit 100
   fi
 }
 
@@ -1431,13 +1441,11 @@ run_benchmark() {
     PID=$!
     wait_fqrn_mount
     execute_benchmark_loop
+    create_info_file
     benchmark_log "Iterations finished. Unmounting cvmfs"
     cvmfs_umount $FQRN
+    wait $PID
   fi
-
-  create_info_file
-  wait $PID
-  return $code
 }
 
 
