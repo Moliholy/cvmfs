@@ -16,7 +16,7 @@ if [ $# -ne 2 ]; then
 fi
 
 CVMFS_SOURCE_LOCATION="$1"
-CVMFS_RESULT_LOCATION="$2/cvmfs-release"
+CVMFS_RESULT_LOCATION="$2/cvmfs-release_1.0-0"
 
 mkdir -p ${CVMFS_RESULT_LOCATION}
 

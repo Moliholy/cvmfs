@@ -1,0 +1,6 @@
+#!/bin/sh
+
+set -e
+
+apt-key del /etc/apt/trusted.gpg.d/DEB-GPG-KEY-CernVM
+apt-add-repository --remove -y "deb http://molina-deb.cern.ch/cvmrepo/apt/ cvmfs main server keys config"
