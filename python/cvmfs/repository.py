@@ -93,10 +93,14 @@ class RepositoryIterator:
             self.catalog_iterator = catalog.__iter__()
 
 
-    def __init__(self, repository):
+    def __init__(self, repository, catalog_hash=None):
         self.repository    = repository
         self.catalog_stack = collections.deque()
-        self._push_catalog(repository.retrieve_root_catalog())
+        if catalog_hash is None:
+            catalog = repository.retrieve_root_catalog()
+        else:
+            catalog = repository.retrieve_catalog(catalog_hash)
+        self._push_catalog(catalog)
 
 
     def __iter__(self):
@@ -106,6 +110,7 @@ class RepositoryIterator:
     def next(self):
         full_path, dirent = self._get_next_dirent()
         if dirent.is_nested_catalog_mountpoint():
+            print "Accessing the catalog in ", full_path
             self._fetch_and_push_catalog(full_path)
             return self.next() # same directory entry is also in nested catalog
         return full_path, dirent
@@ -125,6 +130,9 @@ class RepositoryIterator:
         current_catalog = self._get_current_catalog().catalog
         nested_ref      = current_catalog.find_nested_for_path(catalog_mountpoint)
         if not nested_ref:
+            print "No catalog found under ", catalog_mountpoint
+            print current_catalog.__dict__
+            print nested_ref
             raise NestedCatalogNotFound(self.repository)
         new_catalog     = nested_ref.retrieve_from(self.repository)
         self._push_catalog(new_catalog)
