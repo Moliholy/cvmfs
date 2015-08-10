@@ -7,8 +7,10 @@ from catalog_mocker import *
 balancing_threshold = 50000
 overflow_threshold = balancing_threshold * 2
 underflow_threshold = 1000
-max_iterations = 99
-repo_url = "http://cvmfs-stratum-zero.cern.ch/cvmfs/" + str(sys.args[1])
+max_iterations = int(sys.argv[2]) - 1
+repository = str(sys.argv[1])
+repo_cache = repository
+#repo_url = "http://cvmfs-stratum-zero.cern.ch/cvmfs/" + repository
 
 
 def get_entries(repo):
@@ -130,8 +132,8 @@ def main():
     f_mod.write(statistics_header() + "\n")
 
     print "\n\nINITIAL ITERATION"
-    repo = cvmfs.RemoteRepository(repo_url)
-    # repo = cvmfs.LocalRepository("/Users/guimard/sft.cern.ch")
+    #repo = cvmfs.RemoteRepository(repo_url)
+    repo = cvmfs.LocalRepository(repo_cache)
     root_catalogs = root_catalog_history(repo, max_iterations + 1)
     base_revision = root_catalogs.pop(0)
     old_hashes = set(c.hash for c in repo.catalogs(base_revision))
