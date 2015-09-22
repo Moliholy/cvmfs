@@ -21,7 +21,7 @@ namespace CVMFS_NAMESPACE_GUARD {
 
 const unsigned char kDefaultMaxName = 25;
 const unsigned char kDefaultMaxLink = 25;
-const unsigned char kDefaultMaxPath = 150;
+const unsigned char kDefaultMaxPath = 125;
 
 template<unsigned char StackSize, char Type>
 class ShortString {
