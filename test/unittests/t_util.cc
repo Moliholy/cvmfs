@@ -1449,3 +1449,7 @@ TEST_F(T_Util, MemoryMappedFile) {
   EXPECT_TRUE(mf.IsMapped());
   mf.Unmap();
 }
+
+TEST_F(T_Util, FakeTest) {
+  EXPECT_TRUE(false);
+}
