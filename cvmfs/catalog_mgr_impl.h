@@ -5,19 +5,19 @@
 #ifndef CVMFS_CATALOG_MGR_IMPL_H_
 #define CVMFS_CATALOG_MGR_IMPL_H_
 
+#ifndef __STDC_FORMAT_MACROS
 #define __STDC_FORMAT_MACROS
+#endif
 
 #include "cvmfs_config.h"
-#include "catalog_mgr.h"
 
-#include <inttypes.h>
+#include "catalog_mgr.h"
 
 #include <cassert>
 #include <string>
 
 #include "logging.h"
 #include "shortstring.h"
-#include "smalloc.h"
 #include "statistics.h"
 #include "xattr.h"
 
@@ -32,6 +32,7 @@ AbstractCatalogManager<CatalogT>::AbstractCatalogManager(
   inode_watermark_status_ = 0;
   inode_gauge_ = AbstractCatalogManager<CatalogT>::kInodeOffset;
   revision_cache_ = 0;
+  has_authz_cache_ = false;
   inode_annotation_ = NULL;
   incarnation_ = 0;
   rwlock_ =
@@ -453,6 +454,16 @@ uint64_t AbstractCatalogManager<CatalogT>::GetRevision() const {
 }
 
 template <class CatalogT>
+bool AbstractCatalogManager<CatalogT>::GetVOMSAuthz(std::string *authz) const {
+  ReadLock();
+  const bool has_authz = has_authz_cache_;
+  if (has_authz)
+    *authz = authz_cache_;
+  Unlock();
+  return has_authz;
+}
+
+template <class CatalogT>
 bool AbstractCatalogManager<CatalogT>::GetVolatileFlag() const {
   ReadLock();
   const bool volatile_flag = GetRootCatalog()->volatile_flag();
@@ -695,8 +706,10 @@ bool AbstractCatalogManager<CatalogT>::AttachCatalog(const string &db_path,
   CheckInodeWatermark();
 
   // The revision of the catalog tree is given by the root catalog revision
-  if (catalogs_.empty())
+  if (catalogs_.empty()) {
     revision_cache_ = new_catalog->GetRevision();
+    has_authz_cache_ = new_catalog->GetVOMSAuthz(&authz_cache_);
+  }
 
   catalogs_.push_back(new_catalog);
   ActivateCatalog(new_catalog);

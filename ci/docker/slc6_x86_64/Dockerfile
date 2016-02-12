@@ -9,8 +9,10 @@ RUN         yum -y update && yum -y install                     \
                                         gcc                     \
                                         gcc-c++                 \
                                         git                     \
+                                        gridsite                \
                                         hardlink                \
                                         libattr-devel           \
+                                        libcap-devel            \
                                         libuuid-devel           \
                                         make                    \
                                         openssl-devel           \
@@ -20,8 +22,12 @@ RUN         yum -y update && yum -y install                     \
                                         selinux-policy-devel    \
                                         selinux-policy-targeted \
                                         sysvinit-tools          \
+                                        valgrind-devel          \
+                                        voms-devel              \
                                         which                   \
-                                        zlib-devel
+                                        zlib-devel              \
+                                        python-pip              \
+            && pip install --upgrade pip gcovr
 
 RUN         useradd sftnight
 USER        sftnight

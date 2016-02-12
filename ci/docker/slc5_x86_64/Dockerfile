@@ -9,9 +9,12 @@ RUN         yum -y update && yum -y install                     \
                                         fuse-devel              \
                                         gcc                     \
                                         gcc-c++                 \
+                                        gdb                     \
                                         git                     \
+                                        gridsite                \
                                         hardlink                \
                                         libattr-devel           \
+                                        libcap-devel            \
                                         make                    \
                                         openssl-devel           \
                                         python-devel            \
@@ -20,8 +23,10 @@ RUN         yum -y update && yum -y install                     \
                                         selinux-policy-devel    \
                                         selinux-policy-targeted \
                                         which                   \
+                                        voms-devel              \
+                                        valgrind-devel          \
                                         zlib-devel
 
-RUN         useradd sftnight && usermod -a -G mock sftnight
+RUN         useradd sftnight
 USER        sftnight
 WORKDIR     /home/sftnight

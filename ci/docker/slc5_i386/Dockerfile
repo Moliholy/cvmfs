@@ -10,9 +10,11 @@ RUN         yum -y update && yum -y install                     \
                                         fuse-devel              \
                                         gcc                     \
                                         gcc-c++                 \
+                                        gdb                     \
                                         git                     \
                                         hardlink                \
                                         libattr-devel           \
+                                        libcap-devel            \
                                         make                    \
                                         openssl-devel           \
                                         python-devel            \
@@ -20,7 +22,9 @@ RUN         yum -y update && yum -y install                     \
                                         SysVinit                \
                                         selinux-policy-devel    \
                                         selinux-policy-targeted \
-                                        which                   \
+                                        voms-devel              \
+                                        which                   \ 
+                                        valgrind-devel          \
                                         zlib-devel
 
 RUN         useradd sftnight

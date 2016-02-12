@@ -2,7 +2,7 @@
 
 In case you want to access CernVM-FS repositories but the fuse module is not installed neither do you have the permissions to install it yourself, the [parrot](http://ccl.cse.nd.edu/software/parrot) toolkit provides you a means to "mount" CernVM-FS on Linux in pure user space.  Parrot sandboxes your application in a similar way `gdb` sandboxes your application.  But instead of debugging the application, parrot transparently rewrites file system calls and can effectively provide /cvmfs to your application.
 
-This page provides examples on how to start an application in a parrot+cvmfs sandbox.  We recommend the precompiled parrot from the [cctools 5.2.0 package](http://ccl.cse.nd.edu/software/downloadfiles.php).  At the end of the page, there are instructions on how to compile parrot+cvmfs from sources.
+This page provides examples on how to start an application in a parrot+cvmfs sandbox.  We recommend the precompiled parrot from the [cctools 5.3.2 package](http://ccl.cse.nd.edu/software/downloadfiles.php).  At the end of the page, there are instructions on how to compile parrot+cvmfs from sources.
 
 
 ## Basics
@@ -16,6 +16,7 @@ Make sure the right version of parrot is executed by checking `parrot_run -v`.  
 Export the following environment variables:
 
     export PARROT_CVMFS_REPO="<default-repositories>"
+    export PARROT_ALLOW_SWITCHING_CVMFS_REPOSITORIES=yes
     export HTTP_PROXY='<SITE HTTP PROXY>'  # or 'DIRECT;' if not on a cluster or grid site
 
 Test parrot with
@@ -78,10 +79,10 @@ For feedback and bug reports, please write to either the [cctools mailing list](
 
 If you want to compile parrot+cvmfs from sources, please use the `libcvmfs-stable` git branch from the [CernVM-FS github repository](https://github.com/cvmfs/cvmfs/tree/libcvmfs-stable).  The `libcvmfs-stable` branch reflects a state between the head of development (`devel`) and the latest released version (`master`).
 
-Compile a using [libuuid](http://sourceforge.net/projects/libuuid):
+Compile a static [libuuid](http://sourceforge.net/projects/libuuid):
 
     ./configure --prefix=/tmp/cvmfs/UUID --enable-static --disable-shared
-    make
+    make 
     make install
 
 To create libcvmfs.a in /tmp/cvmfs/INSTALLCVMFS, compile and install CernVM-FS with the following commands

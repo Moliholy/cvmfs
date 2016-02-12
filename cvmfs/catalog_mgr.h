@@ -139,6 +139,7 @@ template <class CatalogT>
 class AbstractCatalogManager : public SingleCopy {
  public:
   typedef std::vector<CatalogT*> CatalogList;
+  typedef CatalogT catalog_t;
 
   static const inode_t kInodeOffset = 255;
   explicit AbstractCatalogManager(perf::Statistics *statistics);
@@ -183,6 +184,7 @@ class AbstractCatalogManager : public SingleCopy {
   uint64_t GetRevision() const;
   bool GetVolatileFlag() const;
   uint64_t GetTTL() const;
+  bool GetVOMSAuthz(std::string *authz) const;
   int GetNumCatalogs() const;
   std::string PrintHierarchy() const;
 
@@ -273,6 +275,14 @@ class AbstractCatalogManager : public SingleCopy {
   int inode_watermark_status_;  /**< 0: OK, 1: > 32bit */
   uint64_t inode_gauge_;  /**< highest issued inode */
   uint64_t revision_cache_;
+  /**
+   * Saves the result of GetVOMSAuthz when a root catalog is attached
+   */
+  bool has_authz_cache_;
+  /**
+   * Saves the VOMS requirements when a root catalog is attached
+   */
+  std::string authz_cache_;
   /**
    * Counts how often the inodes have been invalidated.
    */

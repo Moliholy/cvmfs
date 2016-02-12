@@ -32,12 +32,14 @@ RUN        yum -y update && yum -y install                      \
                                         gawk                    \
                                         gcc4                    \
                                         gcc4-c++                \
+                                        gdb                     \
                                         git                     \
                                         glibc-common            \
                                         grep                    \
                                         gzip                    \
                                         initscripts             \
                                         libattr-devel           \
+                                        libcap-devel            \
                                         make                    \
                                         openssl                 \
                                         openssl-devel           \
@@ -51,6 +53,7 @@ RUN        yum -y update && yum -y install                      \
                                         shadow-utils            \
                                         SysVinit                \
                                         unzip                   \
+                                        voms-devel              \
                                         which                   \
                                         zlib
 

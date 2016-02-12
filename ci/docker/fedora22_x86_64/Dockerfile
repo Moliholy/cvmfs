@@ -8,7 +8,11 @@ RUN         dnf -y update && dnf -y install                     \
                                         fuse-devel              \
                                         gcc                     \
                                         gcc-c++                 \
+                                        git                     \
+                                        gridsite                \
+                                        hardlink                \
                                         libattr-devel           \
+                                        libcap-devel            \
                                         libuuid-devel           \
                                         make                    \
                                         nfs-utils               \
@@ -21,7 +25,9 @@ RUN         dnf -y update && dnf -y install                     \
                                         selinux-policy-targeted \
                                         sudo                    \
                                         tree                    \
+                                        voms-devel              \
                                         which                   \
+                                        valgrind-devel          \
                                         zlib-devel
 
 RUN         useradd sftnight

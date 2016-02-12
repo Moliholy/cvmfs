@@ -9,6 +9,10 @@
 #   REPO_BASE_URL  URL to the base yum repository to be used for bootstrapping
 #   GPG_KEY_PATHS  URL to the GPG key to be used for RPM signature validation
 #   BASE_PACKAGES  list of packages to be installed for bootstrapping the system
+#
+# Additionally the following variables are optional:
+#
+#   PACKAGE_MGR    the package manager to use (defaults to 'yum')
 
 set -e
 
@@ -22,12 +26,14 @@ TARBALL_NAME="${SYSTEM_NAME}_${BASE_ARCH}.tar.gz"
 DESTINATION="$(mktemp -d)"
 YUM_REPO_CFG=/etc/yum/repos.d/${SYSTEM_NAME}_${BASE_ARCH}-bootstrap.repo
 YUM_REPO_NAME=${SYSTEM_NAME}-${BASE_ARCH}-os-bootstrap
+PACKAGE_MGR=${PACKAGE_MGR:=yum}
 
 echo "installing cleanup handler..."
 cleanup() {
   echo "cleaning up the build environment..."
   umount ${DESTINATION}/dev  || true
   umount ${DESTINATION}/proc || true
+  umount ${DESTINATION}/sys  || true
   rm -f $YUM_REPO_CFG        || true
   rm -fR $DESTINATION        || true
 }
@@ -43,7 +49,7 @@ cat > $YUM_REPO_CFG << EOF
 name=$SYSTEM_NAME base system packages
 baseurl=$REPO_BASE_URL
 gpgkey=$GPG_KEY_PATHS
-gpgcheck=0
+gpgcheck=1
 enabled=0
 EOF
 
@@ -64,7 +70,9 @@ yum --disablerepo='*'             \
     --installroot=$DESTINATION    \
     -y install                    \
     $BASE_PACKAGES
-touch ${DESTINATION}/etc/mtab
+
+mtab="${DESTINATION}/etc/mtab"
+[ -e $mtab ] || [ -h $mtab ] || touch $mtab
 
 echo "fixing yum configuration files to architecture..."
 for f in $(find ${DESTINATION}/etc/yum.repos.d -type f); do
@@ -77,7 +85,9 @@ echo "do generic system setup..."
 cp /etc/resolv.conf ${DESTINATION}/etc/resolv.conf
 echo "NETWORKING=yes" > ${DESTINATION}/etc/sysconfig/network
 chroot $DESTINATION ln -f /usr/share/zoneinfo/Etc/UTC /etc/localtime
+mkdir -p ${DESTINATION}/dev ${DESTINATION}/sys ${DESTINATION}/proc
 mount --bind /dev ${DESTINATION}/dev
+mount -t sysfs sys ${DESTINATION}/sys/
 
 echo "recreating RPM database with chroot'ed RPM version..."
 rm -fR $rpm_db_dir && mkdir -p $rpm_db_dir
@@ -86,10 +96,11 @@ chroot $DESTINATION /bin/rpm -ivh --justdb '/var/cache/yum/*/packages/*.rpm'
 rm -r ${DESTINATION}/var/cache/yum/
 
 echo "doing final housekeeping..."
-chroot $DESTINATION yum clean all
+chroot $DESTINATION $PACKAGE_MGR clean all
 rm -f ${DESTINATION}/etc/resolv.conf
 umount ${DESTINATION}/dev  || true # ignore failing umount
 umount ${DESTINATION}/proc || true # ignore failing umount
+umount ${DESTINATION}/sys  || true # ignore failing umount
 
 echo "packaging up the image..."
 tar -czf $TARBALL_NAME -C $DESTINATION .
